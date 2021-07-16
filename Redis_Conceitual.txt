@@ -1,0 +1,80 @@
+Redis é um banco de dados não relacional do tipo Chave-Valor e que armazena os dados em memoria. 
+Ele até pode fazer réplicas em arquivos mas exige configurações mais detalhadas relacionadas a 
+expiração dos dados e operações de recomposição.
+
+Características:
+- Gravacao e leitura rapida
+- Perfeito pra trabalhar soluções de acesso com cache
+
+Chave-valor
+-----------------
+| key |	value	|
+|----------------
+| A   |	"text"  |
+| B   |	HASH    | ex: Json e hashes detalhados
+| C   |	LIST    |
+| D   |	SETS    |
+-----------------
+
+
+Pontos fortes:
+1-Extremamente performático;
+2-Muito conhecido, materais fáceis, suporte de várias linguages de programação;
+3-Todas clouds suportam podem instalar em containers, local, on primesys;
+4-Fácil fazer em Cluster, em Docker, Kubernets, Máquinas Físicas.
+
+Pontos fracos:
+1-Limitado a quantidade de memória da sua máquina ou VM;
+2-Não suporta a linguagem SQL
+3-Não trabalha muito bem com segurança, usuário e senha e nada mais. chaves valor permitem e permissão de acesso estática;
+4-Roda em um único CPU, pode até ter muita memória mas a CPU é uma só e aumentar a quantidade de cores não resolveria e as soluções 
+seriam trabalhar com Containers de forma clusterizada ou criando diversas VM's nessas maquinas e distribuir os produtos redis 
+por elas ou até mesmo instalar em outras máquinas fisicas.
+
+Pode-se utilizar...
+Feature Toggle trabalha muito bem e le muito bem um banco Redis e neste caso leria um banco SQL atraves do microservico e que seria 
+atualizado por um microbatch/microservicos no Redis por exemplo montando o cache PARAMETRIZANDO um timeout de 1 hora por exemplo.
+
+
+Utilizando o banco Redis com CQRS -(Command Query Responsibility Segregation, ou CQRS, é um padrão de arquitetura de desenvolvimento de software que resume a separar a leitura e a escrita em dois modelos: query e command, uma para leitura e outra para escrita de dados, respectivamente) 
+
+
+	|-----------------------BANCO REDIS		e 		BANCO SQL-----------------|
+	|							|			   			|                     |
+	|		1-o domínio grava   |			   			| 1-o domínio         |
+	|		  aqui	   	        |			   			|   grava aqui        |
+	|							|						|                     |
+	|							|						|                     |
+	|							------------|------------                     |
+	|							<----grava	| grava --->                      |
+	|										|	                              |
+	|-------------------------------------DOMAIN------------------------------|
+			<----- 2-Leitura				| -> 4-Expirou no cache? Atualiza!
+											|
+											|
+											|3-devolve para a aplicação	
+											|
+										   APP
+
+	
+1-o Domain grava no SQL e grava no Redis;
+
+2-na hora de ler(no get) é feita no Redis;
+
+3-Que devolve para Domínio e devolve para a aplicação;
+
+4-Em caso de expiração do Cache, o Redis solicita dados novos no banco SQL.
+
+
+Redis é recomendado para:
+
+a)Menus estáticos de baixa volatividade;
+b)Dados D-1 ou 24/horas (ex: extratos banco);
+c)Tokens;
+d)Chaves feature toogle; 
+e)Valores de seguranca;
+
+considera um trade off ou seja mais uma tecnologia para se manter
+, atualizar e ajustar...
+
+
