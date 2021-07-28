@@ -39,22 +39,22 @@ atualizado por um microbatch/microservicos no Redis por exemplo montando o cache
 Utilizando o banco Redis com CQRS -(Command Query Responsibility Segregation, ou CQRS, é um padrão de arquitetura de desenvolvimento de software que resume a separar a leitura e a escrita em dois modelos: query e command, uma para leitura e outra para escrita de dados, respectivamente) 
 
 
-	|-----------------------BANCO REDIS		e 		BANCO SQL-----------------|
-	|							|			   			|                     |
-	|		1-o domínio grava   |			   			| 1-o domínio         |
-	|		  aqui	   	        |			   			|   grava aqui        |
-	|							|						|                     |
-	|							|						|                     |
-	|							------------|------------                     |
-	|							<----grava	| grava --->                      |
-	|										|	                              |
-	|-------------------------------------DOMAIN------------------------------|
-			<----- 2-Leitura				| -> 4-Expirou no cache? Atualiza!
-											|
-											|
-											|3-devolve para a aplicação	
-											|
-										   APP
+	|-----------------------BANCO REDIS 	e	 BANCO SQL-----------------|
+	|	   		    |			     |                     |
+	|	1-o domínio grava   |			     | 1-o domínio         |
+	|	aqui	 	    |			     |   grava aqui        |
+	|			    |                        |                     |
+	|			    |			     |                     |
+	|			    ------------|-------------                     |
+	|			<----grava	| grava --->                       |
+	|	  			        |	                           |
+	|-------------------------------------DOMAIN-------------------------------|
+			<----- 2-Leitura	| -> 4-Expirou no cache? Atualiza!
+						|
+						|
+						|3-devolve para a aplicação	
+						|
+						APP
 
 	
 1-o Domain grava no SQL e grava no Redis;
