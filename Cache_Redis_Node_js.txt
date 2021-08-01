@@ -1,0 +1,259 @@
+Exemplo do link https://www.youtube.com/watch?v=RTJ7u4QE9UE
+que descreve como configurar o tempo de retensão no cache
+a partir do módulo javascript cache.js e spotify.js(teste de busca por mautor etc)usica,
+
+
+Dockerfile
+@@ -0,0 +1,18 @@
+FROM node:lts-alpine
+
+WORKDIR /usr/src/app
+
+RUN mkdir node_modules && chown -R node:node node_modules
+
+USER node
+
+COPY package*.json yarn.* ./
+
+RUN yarn
+
+COPY --chown=node:node . .
+
+EXPOSE 3000
+
+CMD [ "yarn", "start" ]
+
+
+
+
+
+
+ 33  README.md 
+@@ -0,0 +1,33 @@
+<h1 align="center">
+Using Redis to caching an artist recommendation list from Spotify API
+</h1>
+
+<h4 align="center">
+A project to handle with cache and make Apps faster.
+</h4>
+
+## Spotify API
+
+- [DOC](https://developer.spotify.com/console/get-recommendations/)
+
+## Technologies
+
+- [Node.js](https://nodejs.org/en/)
+- [Express](https://expressjs.com/)
+- [Nodemon](https://nodemon.io/)
+- [Docker](https://www.docker.com/docker-community)
+- [Docker-Compose](https://docs.docker.com/compose/install/)
+- [Redis](https://redis.io/)
+- [Axios](https://github.com/axios/axios)
+
+## Requirement
+
+- [Node.js](https://nodejs.org/en/)
+- [Yarn](https://yarnpkg.com/pt-BR/docs/install)
+- [Docker](https://www.docker.com/docker-community)
+- [Docker-Compose](https://docs.docker.com/compose/install/)
+
+## Installation and Run
+
+1. Create a `.env` file like `.env.example` with the credentials and informations;
+2. Run `docker-compose up`
+
+
+
+
+
+
+
+ 28  docker-compose.yml 
+@@ -0,0 +1,28 @@
+version: "3"
+
+services:
+  api:
+    build: .
+    container_name: cache-spotify
+    ports:
+      - "3000:3000"
+    restart: on-failure
+    environment:
+      - SPOTIFY_TOKEN=${SPOTIFY_TOKEN}
+      - REDIS_HOST=redis-cache
+    networks:
+      - cache-spotify-network
+    depends_on:
+      - redis-cache
+  redis-cache:
+    image: redis
+    container_name: redis
+    restart: on-failure
+    volumes:
+      - redis-data:/data
+    networks:
+      - cache-spotify-network
+volumes:
+  redis-data:
+networks:
+  cache-spotify-network:
+
+
+
+
+
+
+ 19  package.json 
+@@ -0,0 +1,19 @@
+{
+  "name": "cache-spotify",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node src/index",
+    "dev": "nodemon src/index"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "ioredis": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
+
+
+
+
+
+
+ 15  src/index.js 
+@@ -0,0 +1,15 @@
+require("dotenv/config");
+const express = require("express");
+const spotify = require("./lib/spotify");
+
+const app = express();
+
+app.get("/spotify", async (req, res) => {
+  const params = req.query;
+
+  const result = await spotify.recommendation(params);
+
+  return res.json(result);
+});
+
+app.listen(process.env.PORT || "3000");
+
+
+
+
+
+
+
+
+ 10  src/lib/api.js 
+@@ -0,0 +1,10 @@
+const axios = require("axios");
+
+const api = axios.create({
+  baseURL: "https://api.spotify.com/v1",
+  headers: {
+    Authorization: `Bearer ${process.env.SPOTIFY_TOKEN}`,
+  },
+});
+
+module.exports = api;
+
+
+
+
+
+
+
+************************* recursos do Redis: snapshot, benchmark, cluster ****
+ 34  src/lib/cache.js 
+@@ -0,0 +1,34 @@
+const Redis = require("ioredis");
+
+class cache {
+  constructor() {
+    this.redis = new Redis({
+      host: process.env.REDIS_HOST || "localhost",
+      port: process.env.REDIS_PORT || 6379,
+      keyPrefix: "cache:",
+    });
+  }
+
+  async get(key) {
+    const value = await this.redis.get(key);
+
+    return value ? JSON.parse(value) : null;
+  }
+
+  set(key, value, timeExp) {
+    return this.redis.set(key, JSON.stringify(value), "EX", timeExp);
+  }
+
+  del(key) {
+    return this.redis.del(key);
+  }
+
+  async delPrefix(prefix) {
+    const keys = (await this.redis.keys(`cache:${prefix}:*`)).map((key) =>
+      key.replace("cache:", "")
+    );
+
+    return this.redis.del(keys);
+  }
+}
+module.exports = new cache();
+
+
+
+
+
+
+
+
+
+
+
+ 30  src/lib/spotify.js 
+@@ -0,0 +1,30 @@
+const api = require("./api");
+const querystring = require("querystring");
+const cache = require("./cache");
+
+class Spotify {
+  async recommendation(options) {
+    const params = querystring.stringify(options);
+
+    const cached = await cache.get(params);
+
+    if (cached) {
+      return cached;
+    }
+
+    const { data } = await api.get(`/recommendations?${params}`);
+
+    const response = data.tracks.map((album) => {
+      return {
+        artist: album.artists[0].name,
+        url: album.artists[0].external_urls.spotify,
+      };
+    });
+
+    cache.set(params, response, 60 * 15);
+
+    return response;
+  }
+}
+
+module.exports = new Spotify();
