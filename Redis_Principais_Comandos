@@ -1,0 +1,238 @@
+Os principais comandos do Redis incluem SET e GET para armazenar e recuperar dados, EXPIRE para definir um tempo de vida para as chaves, e DEL para excluir chaves. Além disso, INCR e DECR são usados para incrementar e decrementar valores, e KEYS e SCAN para listar chaves. 
+Comandos Essenciais:
+SET: Armazena um valor associado a uma chave. 
+GET: Recupera o valor associado a uma chave. 
+EXPIRE: Define um tempo de vida (TTL) para uma chave, após o qual ela é automaticamente excluída. 
+DEL: Exclui uma chave e seu valor associado. 
+INCR: Incrementa o valor de uma chave (se for um inteiro). 
+DECR: Decrementa o valor de uma chave (se for um inteiro). 
+KEYS: Retorna um array de todas as chaves que correspondem a um determinado padrão. 
+SCAN: Itera sobre as chaves do banco de dados (especialmente útil para grandes bancos de dados). 
+RENAME: Renomeia uma chave. 
+RENAMENX: Renomeia uma chave, mas apenas se a nova chave não existir. 
+EXISTS: Verifica se uma chave existe. 
+TYPE: Retorna o tipo de dados de uma chave. 
+PSETEX: Define um valor para uma chave com tempo de vida em milissegundos. 
+PTTL: Retorna o tempo de vida em milissegundos para uma chave. 
+TTL: Retorna o tempo de vida (em segundos) para uma chave. 
+UNLINK: Marca uma chave para remoção em segundo plano. 
+Outros Comandos Importantes:
+AUTH: Usado para autenticar o servidor Redis (se a autenticação estiver ativada). 
+CLIENT: Fornece informações sobre os clientes conectados e permite manipular os clientes. 
+SELECT: Seleciona um dos 16 bancos de dados do Redis (por padrão, é o banco 0). 
+INFO: Retorna informações sobre o servidor Redis, como versão, sistema operacional, etc. 
+PING: Verifica se o servidor Redis está em funcionamento. 
+FLUSHDB: Limpa o banco de dados atual. 
+FLUSHALL: Limpa todos os bancos de dados (deve ser usado com cuidado). 
+EVAL: Executa um script Lua. 
+EVALSHA: Executa um script Lua pré-compilado. 
+SAVE: Salva o banco de dados Redis para um arquivo no disco. 
+BGSAVE: Salva o banco de dados Redis em segundo plano. 
+QUIT: Fecha a conexão com o servidor Redis. 
+
+Fonte: https://dev.to/paulowalravendev/comandos-basicos-do-redis-3e6l
+
+
+Comandos básicos do Redis
+#
+redis
+#
+tutorial
+#
+programming
+#
+braziliandevs
+Tópicos:
+Introdução
+Comandos
+Buscando as chaves do banco:
+Inserindo valores em chaves
+Recuperando valores das chaves
+Removendo chaves
+Configurando tempo de exclusão das chaves
+Inserir e configurar o tempo de expiração
+Inspecionar expiração de uma chave
+Removendo tempo de expiração de uma chave
+Introdução
+No Redis, "key" é o termo usado para se referir a uma chave que é usada para identificar e acessar um determinado valor armazenado no banco de dados. Cada valor armazenado no Redis é associado a uma chave, que é uma string.
+
+As chaves são únicas no Redis e podem ser usadas para acessar os valores associados a elas de forma eficiente, sem a necessidade de percorrer todos os valores armazenados no banco de dados. As chaves são usadas para identificar valores em todas as estruturas de dados do Redis, como strings, listas, conjuntos, hashes e sorted sets.
+
+As chaves no Redis têm algumas limitações. Primeiro, elas devem ser únicas em todo o banco de dados. Isso significa que, se você tentar definir uma chave que já existe, o valor anterior será substituído pelo novo valor. Além disso, as chaves podem ter um tamanho máximo de 512 MB.
+
+É importante escolher nomes de chave significativos e que descrevam bem o valor que está sendo armazenado. Nomes de chaves bem escolhidos podem ajudar a tornar o código mais legível e facilitar a manutenção do banco de dados. Por exemplo, em um aplicativo web, você pode usar nomes de chave como "usuario:123" para armazenar informações de um usuário com ID 123 ou "carrinho:456" para armazenar o carrinho de compras de um cliente com ID 456.
+
+Em resumo, no Redis, "key" é a string usada para identificar e acessar um determinado valor armazenado no banco de dados. As chaves são únicas e devem ser escolhidas de maneira significativa para facilitar a legibilidade e a manutenção do código.
+
+Comandos:
+Buscando as chaves do banco:
+O comando KEYS e o comando SCAN do Redis são usados para recuperar as chaves armazenadas no banco de dados. A principal diferença entre eles é a forma como eles recuperam as chaves e o impacto que isso pode ter no desempenho do Redis.
+
+O comando KEYS é uma operação de varredura que retorna todas as chaves que correspondem a um padrão especificado. Por exemplo, você pode usar o comando KEYS para encontrar todas as chaves que começam com a string "user:" em um banco de dados Redis:
+
+KEYS user:*
+Embora o comando KEYS seja útil para recuperar chaves com base em um padrão, ele pode ter um grande impacto no desempenho do Redis se usado em bancos de dados com muitas chaves. Isso ocorre porque o Redis executa a varredura de todas as chaves no banco de dados para encontrar as chaves correspondentes ao padrão, o que pode ser muito demorado.
+
+Para contornar esse problema, o Redis fornece o comando SCAN, que é uma operação de varredura incremental que retorna um conjunto de chaves em lotes menores. O comando SCAN recebe um cursor de varredura e um padrão de correspondência, e retorna um conjunto de chaves que correspondem ao padrão e um novo cursor de varredura que pode ser usado para recuperar o próximo conjunto de chaves. Aqui está um exemplo de como usar o comando SCAN para recuperar todas as chaves que começam com a string "user:" em um banco de dados Redis:
+
+SCAN 0 MATCH user:*
+Neste exemplo, o comando SCAN começa com um cursor de varredura de valor 0 e um padrão de correspondência user:*. O Redis retorna um conjunto de chaves que correspondem ao padrão, juntamente com um novo cursor de varredura que pode ser usado para recuperar o próximo conjunto de chaves.
+
+Em geral, é recomendável usar o comando SCAN em vez do comando KEYS sempre que possível, especialmente em bancos de dados com muitas chaves. O comando SCAN é menos oneroso para o desempenho do Redis porque executa a varredura de um conjunto menor de chaves a cada chamada e retorna um conjunto menor de chaves. Isso ajuda a reduzir a carga no servidor Redis e evita que ele fique indisponível devido a operações de varredura demoradas.
+
+Inserindo valores em chaves
+O Redis possui vários comandos para inserir valores em chaves. Alguns dos comandos mais comuns são:
+
+SET: O comando SET é usado para definir um valor para uma chave. Se a chave já existir, seu valor anterior será substituído. Se a chave não existir, uma nova chave será criada com o valor especificado. O comando SET também permite definir opções, como o tempo de expiração da chave.
+
+SET minha_chave "valor da chave"
+Este comando define o valor "valor da chave" para a chave "minha_chave". Se a chave já existir, seu valor anterior será substituído.
+
+MSET: O comando MSET é usado para definir vários valores de uma vez. Ele aceita um número arbitrário de argumentos, cada um representando uma chave e seu valor correspondente.
+
+MSET chave1 "valor 1" chave2 "valor 2" chave3 "valor 3"
+Este comando define os valores "valor 1", "valor 2" e "valor 3" para as chaves "chave1", "chave2" e "chave3", respectivamente.
+
+SETNX: O comando SETNX é usado para definir o valor de uma chave somente se a chave não existir. Se a chave já existir, o comando não faz nada.
+
+SETNX minha_chave "valor da chave"
+Este comando define o valor "valor da chave" para a chave "minha_chave" somente se a chave não existir. Se a chave já existir, o comando não faz nada.
+
+MSETNX: O comando MSETNX é usado para definir vários valores de uma vez, mas somente se todas as chaves especificadas não existirem. Ele aceita um número arbitrário de argumentos, cada um representando uma chave e seu valor correspondente.
+
+MSETNX chave1 "valor 1" chave2 "valor 2" chave3 "valor 3"
+Este comando define os valores "valor 1", "valor 2" e "valor 3" para as chaves "chave1", "chave2" e "chave3", respectivamente, somente se todas as chaves especificadas não existirem.
+
+SETEX: O comando SETEX é usado para definir um valor para uma chave com um tempo de expiração específico. Ele aceita três argumentos: a chave, o tempo de expiração em segundos e o valor.
+
+SETEX minha_chave 3600 "valor da chave"
+Este comando define o valor "valor da chave" para a chave "minha_chave" e define um tempo de expiração de 1 hora (3600 segundos).
+
+PSETEX: O comando PSETEX é semelhante ao SETEX, mas o tempo de expiração é especificado em milissegundos em vez de segundos.
+
+PSETEX minha_chave 3600000 "valor da chave"
+Este comando define o valor "valor da chave" para a chave "minha_chave" e define um tempo de expiração de 1 hora (3600000 milissegundos).
+
+APPEND: O comando APPEND é usado para anexar um valor a uma chave existente. Se a chave não existir, o comando criará uma nova chave com o valor especificado.
+
+APPEND minha_chave " valor adicional"
+Este comando anexa o valor " valor adicional" à chave "minha_chave". Se a chave não existir, o comando criará uma nova chave com o valor especificado.
+
+Recuperando valores das chaves
+GET:
+
+GET minha_chave
+Este comando retorna o valor associado à chave "minha_chave".
+
+MGET:
+
+MGET chave1 chave2 chave3
+Este comando retorna os valores associados às chaves "chave1", "chave2" e "chave3", respectivamente.
+
+GETSET:
+
+GETSET minha_chave "novo valor"
+Este comando retorna o valor anterior associado à chave "minha_chave" e define o novo valor "novo valor" para a chave.
+
+STRLEN:
+
+STRLEN minha_chave
+Este comando retorna o comprimento (em bytes) do valor associado à chave "minha_chave".
+
+INCR:
+
+INCR minha_chave
+Este comando incrementa o valor associado à chave "minha_chave" em 1.
+
+INCRBY:
+
+INCRBY minha_chave 5
+Este comando incrementa o valor associado à chave "minha_chave" em 5.
+
+DECR:
+
+DECR minha_chave
+Este comando decrementa o valor associado à chave "minha_chave" em 1.
+
+DECRBY:
+
+DECRBY minha_chave 5
+Este comando decrementa o valor associado à chave "minha_chave" em 5.
+
+GETRANGE:
+
+GETRANGE minha_chave 0 4
+Este comando retorna a substring do valor associado à chave "minha_chave" que começa no índice 0 e termina no índice 4.
+
+GETBIT:
+
+GETBIT minha_chave 0
+Este comando retorna o valor do bit na posição 0 do valor associado à chave "minha_chave".
+
+Removendo chaves
+Os comandos DEL e UNLINK do Redis são usados para remover chaves do banco de dados. Ambos os comandos funcionam de maneira semelhante, mas há algumas diferenças importantes entre eles.
+
+O comando DEL é usado para excluir uma ou mais chaves especificadas do banco de dados. Por exemplo, o comando DEL pode ser usado para excluir a chave "minha_chave" do banco de dados Redis:
+
+DEL minha_chave
+O comando DEL remove a chave e seu valor imediatamente do banco de dados.
+
+Por outro lado, o comando UNLINK também é usado para excluir chaves do banco de dados, mas tem algumas diferenças importantes. O comando UNLINK é uma versão assíncrona do comando DEL. Em vez de excluir imediatamente as chaves, o comando UNLINK marca as chaves para exclusão e as remove em segundo plano.
+
+Por exemplo, o comando UNLINK pode ser usado para excluir a chave "minha_chave" do banco de dados Redis:
+
+UNLINK minha_chave
+O comando UNLINK marca a chave "minha_chave" para exclusão e remove a chave em segundo plano. O comando UNLINK pode ser útil em situações em que você deseja excluir muitas chaves ao mesmo tempo, mas não deseja sobrecarregar o banco de dados com operações de exclusão síncronas. No entanto, é importante observar que as chaves marcadas para exclusão pelo comando UNLINK podem permanecer no banco de dados por algum tempo antes de serem efetivamente excluídas.
+
+Em resumo, o comando DEL é usado para excluir chaves do banco de dados de forma síncrona, enquanto o comando UNLINK é usado para marcar chaves para exclusão em segundo plano e removê-las posteriormente. Se você precisar excluir chaves imediatamente do banco de dados, o comando DEL é a melhor escolha. No entanto, se você precisar excluir muitas chaves ao mesmo tempo e quiser evitar a sobrecarga do banco de dados com operações de exclusão síncronas, o comando UNLINK pode ser uma boa opção.
+
+Configurando tempo de exclusão das chaves
+Os comandos EXPIRE, EXPIREAT, PEXPIRE e PEXPIREAT são usados para definir um tempo de expiração para uma chave no Redis. Eles permitem que você configure uma chave para ser automaticamente excluída do banco de dados após um determinado período de tempo.
+
+O comando EXPIRE define o tempo de expiração em segundos a partir do momento em que o comando é executado. Por exemplo, o seguinte comando define a chave "minha_chave" para expirar em 60 segundos:
+
+EXPIRE minha_chave 60
+O comando EXPIREAT define o tempo de expiração como um carimbo de data/hora Unix (em segundos) a partir do momento em que o comando é executado. Por exemplo, o seguinte comando define a chave "minha_chave" para expirar às 10h30 do dia 17 de fevereiro de 2023:
+
+EXPIREAT minha_chave 1645086600
+O comando PEXPIRE é semelhante ao comando EXPIRE, mas define o tempo de expiração em milissegundos a partir do momento em que o comando é executado. Por exemplo, o seguinte comando define a chave "minha_chave" para expirar em 500 milissegundos (ou 0,5 segundos):
+
+PEXPIRE minha_chave 500
+O comando PEXPIREAT é semelhante ao comando EXPIREAT, mas define o tempo de expiração como um carimbo de data/hora Unix em milissegundos a partir do momento em que o comando é executado. Por exemplo, o seguinte comando define a chave "minha_chave" para expirar às 10h30 e 30 milissegundos do dia 17 de fevereiro de 2023:
+
+PEXPIREAT minha_chave 1645086630000
+Em resumo, os comandos EXPIRE, EXPIREAT, PEXPIRE e PEXPIREAT são usados para definir um tempo de expiração para uma chave no Redis. Cada um desses comandos oferece uma forma diferente de especificar o tempo de expiração, permitindo que você configure uma chave para ser automaticamente excluída do banco de dados após um determinado período de tempo.
+
+Inserir e configurar o tempo de expiração
+É possível configurar o tempo de expiração de uma chave ao mesmo tempo em que a chave é inserida no Redis, usando o comando SET com o parâmetro opcional EX ou PX.
+
+O parâmetro EX define o tempo de expiração em segundos, enquanto o parâmetro PX define o tempo de expiração em milissegundos. Por exemplo, para inserir a chave "minha_chave" com um valor "meu_valor" e um tempo de expiração de 60 segundos, você pode executar o seguinte comando:
+
+SET minha_chave meu_valor EX 60
+Da mesma forma, para definir um tempo de expiração de 500 milissegundos (ou 0,5 segundos), você pode usar o seguinte comando:
+
+SET minha_chave meu_valor PX 500
+Usar esses parâmetros no comando SET é útil quando você sabe que uma chave específica deve ser excluída automaticamente após um determinado período de tempo. É importante notar que o tempo de expiração definido dessa forma é uma propriedade da chave em si, e não da conexão do cliente que a inseriu, o que significa que a chave será excluída mesmo que a conexão do cliente seja encerrada antes que o tempo de expiração expire.
+
+Inspecionar expiração de uma chave
+O Redis possui dois comandos para inspecionar a expiração de uma chave: TTL e PTTL.
+
+O comando TTL retorna o tempo em segundos restantes para a expiração de uma chave.
+
+TTL minha_chave
+Se a chave "minha_chave" não tiver tempo de expiração definido, o comando retornará -1.
+
+O comando PTTL é semelhante ao TTL, mas retorna o tempo em milissegundos restantes para a expiração de uma chave. Por exemplo, para obter o tempo restante em milissegundos para a expiração da chave "minha_chave", você pode executar o seguinte comando:
+
+PTTL minha_chave
+Para os dois comando TLL e PTTL se a chave não tiver tempo de expiração definido, o comando retorna -1. Se a chave não existir, o comando retorna -2.
+
+Removendo tempo de expiração de uma chave
+O comando PERSIST é usado no Redis para remover a expiração de uma chave, ou seja, tornar uma chave permanente. Se uma chave tiver tempo de expiração definido, ela será excluída automaticamente pelo Redis após o tempo especificado ter decorrido. No entanto, se você deseja manter uma chave para sempre, pode usar o comando PERSIST para remover a expiração definida anteriormente.
+
+Para remover a expiração de uma chave, você pode executar o seguinte comando:
+
+PERSIST minha_chave
+Esse comando removerá a expiração da chave "minha_chave", tornando-a permanente. Se a chave não tiver expiração definida anteriormente, o comando não fará nada.
+
+É importante lembrar que o comando PERSIST não pode ser usado em chaves que não têm tempo de expiração definido. Além disso, assim como outros comandos do Redis, o comando PERSIST é atômico, o que significa que ele é executado como uma operação única e não pode ser interrompido no meio.
