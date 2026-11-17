@@ -78,3 +78,150 @@ considera um trade off ou seja mais uma tecnologia para se manter, atualizar e a
 
 Fonte: https://www.youtube.com/watch?v=wOi2kyMlowk
 
+
+
+O Redis (sigla para Remote Dictionary Server) é um banco de dados NoSQL baseado em chave-valor, projetado para ser extremamente rápido, leve e eficiente. Ele é ideal para cenários onde você precisa acessar informações quase instantaneamente, como:
+
+Cache de requisições
+Armazenamento de sessões de usuários
+Contadores e estatísticas em tempo real
+Filas de processamento (queues)
+Rate limiting (limitar requisições)
+E o mais interessante: o Redis suporta vários tipos de dados além de simples strings — como listas, conjuntos, hashes, streams e sorted sets — tornando-o muito mais versátil do que parece à primeira vista.
+
+--
+Como o Redis funciona por baixo dos panos?
+Agora que você já sabe o que é o Redis, vale entender por que ele é tão rápido — e esse é um daqueles conhecimentos que realmente fazem diferença quando você precisa justificar decisões técnicas no trabalho ou em entrevistas.
+
+O segredo está em três pontos principais:
+
+1. Tudo acontece na memória RAM
+Ao contrário de bancos tradicionais, que gravam e leem dados do disco, o Redis trabalha diretamente na RAM. Isso faz com que operações como salvar, buscar e atualizar aconteçam em microssegundos.
+
+2. Um único thread bem otimizado
+Pode parecer estranho, mas o Redis roda em apenas uma thread. Isso evita problemas clássicos como locks, concorrência e disputas de escrita, tornando tudo mais previsível e rápido. Ele simplesmente processa tudo na ordem que chega — e faz isso absurdamente bem.
+
+3. Estruturas de dados otimizadas
+O Redis não usa tabelas tradicionais. Em vez disso, ele utiliza estruturas de dados pensadas para velocidade:
+
+Strings para valores simples
+Hashes para objetos
+Lists para filas
+Sets para coleções únicas
+Sorted Sets para rankings
+Streams para eventos em tempo real
+Cada estrutura é altamente otimizada para operações específicas, garantindo performance mesmo com alto volume de dados.
+
+Mas e se a RAM acabar?
+Boa pergunta! O Redis pode persistir dados no disco periodicamente, ou salvar apenas quando necessário. Assim, mesmo sendo baseado em memória, ele não perde tudo caso o servidor reinicie.
+
+Quando usar o Redis na vida real? (Cenários que realmente fazem diferença)
+Agora que você já entendeu como o Redis funciona, vamos para a parte que mais interessa: quando vale a pena usar Redis no seu projeto?
+Porque, sinceramente, nem sempre ele é necessário — mas quando é, ele pode transformar a performance da sua aplicação de forma absurda.
+
+Aqui vão os cenários mais comuns (e úteis) do dia a dia:
+
+1. Cache de consultas lentas
+Essa é a aplicação mais famosa.
+Sabe aquela consulta pesada no banco, tipo um SELECT que demora vários segundos?
+Em vez de rodar tudo de novo, você salva o resultado no Redis e busca de lá em milésimos.
+
+Perfeito para:
+
+APIs públicas
+Dados que mudam pouco
+Dashboards
+Sistemas de catálogo (produtos, imóveis, etc.)
+2. Armazenamento de sessões
+Aplicações com login frequentemente precisam guardar:
+
+ID do usuário
+Token de sessão
+Preferências
+Colocar isso no Redis é comum porque:
+
+É rápido
+Fácil de escalar
+Funciona bem com múltiplas instâncias da aplicação
+É o famoso “session store”.
+
+3. Filas de mensagens (Jobs)
+Se você usa filas como:
+
+enviar e-mails
+processar imagens
+gerar PDFs
+rodar tarefas pesadas em segundo plano
+Pode usar Redis como “motor” da fila.
+Ferramentas como Bull e BullMQ (muito usadas com NestJS) são baseadas nele.
+
+4. Rate Limiting
+Sabe quando você precisa limitar requisições de usuários para evitar abuso?
+
+Redis é perfeito para isso porque:
+
+trabalha com contadores muito rápidos
+permite reset por intervalo
+suporta TTL (tempo de expiração)
+5. Dados em tempo real
+Por ser extremamente rápido e trabalhar com streams, Redis funciona super bem em:
+
+chats
+notificações
+rankings ao vivo
+métricas atualizadas a cada segundo
+
+
+Instalando o Redis na sua máquina
+Se você usa Docker (altamente recomendado), basta rodar:
+
+docker run -d --name redis-dev -p 6379:6379 redis
+Se preferir instalar manualmente, visite o site oficial:
+https://redis.io/download
+
+Pronto. Redis rodando localmente na porta 6379.
+
+
+1. Sempre use TTL (tempo de vida) para caches
+Um dos erros mais comuns é salvar coisas no Redis sem expiração e acabar lotando a memória.
+
+Sempre que usar Redis como cache:
+
+await this.cache.setValue('key', 'value', 60); // expira em 60s
+Sem TTL = memória desperdiçada.
+
+2. Use chaves com nomes claros (key naming)
+Essa dica é simples, mas salva vidas:
+
+Not: user1
+Yes: user:1:session
+Yes: cache:product:list
+Padrões bons de seguir:
+
+context:type:id
+3. Evite salvar objetos gigantes
+Redis é memória RAM. Tudo o que você salva vai afetar o consumo.
+Não coloque JSONs enormes, listas com milhares de itens ou blobs pesados.
+
+Se algo é grande demais, volte para o banco tradicional.
+
+4. Monitore o uso de memória
+Redis pode começar rápido e terminar lento se você deixar ele abarrotado.
+
+Ferramentas úteis:
+
+INFO memory
+MONITOR
+Painéis como RedisInsight (super recomendado)
+5. Use Redis Cluster em produção
+Se sua aplicação cresce, considere usar Redis com:
+
+Sharding
+Replicação
+Cluster
+Assim você evita gargalos em alta escala.
+
+6. Evite usar Redis sozinho como banco principal
+Apesar de persistir dados, Redis não substitui um banco relacional (MySQL, Postgres) ou NoSQL de propósito geral (MongoDB).
+
+Ele é um acelerador, não um repositório definitivo.
